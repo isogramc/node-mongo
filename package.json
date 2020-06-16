@@ -1,0 +1,18 @@
+{
+  "name": "product-api",
+  "version": "1.0.0",
+  "description": "basic product browser",
+  "main": "server.js",
+  "dependencies": {
+    "express": "~4.0.0",
+    "body-parser": "~1.0.1",
+    "cors": "2.8.1",
+    "mongodb": "^3.0.10"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "isogramc",
+  "license": "ISC"
+}
