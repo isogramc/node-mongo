@@ -71,6 +71,7 @@ router.route('/list').get(function(req,res) {
                 var dbo = db.db("productso");
                 var results = dbo.collection("products").find({}).toArray(function(err, result) {
                     if (err) throw err;
+                    console.log(result);
                     res.send(result);
                     db.close();
                 });
@@ -136,20 +137,21 @@ router.route('/findbyprice').post(function(req, res){
     }
 })
 
-router.route('/findById').get(function(req, res){
+router.route('/findbyid').post(function(req, res){
     try{
         console.log(req.body[0].id);
         MongoClient.connect(url,
             function(err, db) {
                 if (err) throw err;
                 console.log("Database connected!");
-                var dbo = db.db("productso");
                 var id = req.body[0].id;
-                var results = dbo.collection("products").find({ id: id }).toArray(function(err, result) {
+                var dbo = db.db("productso");
+                var results = dbo.collection("products").find({ productCode: id}).toArray(function(err, result) {
                     if (err) throw err;
+                    console.log(result);
                     res.send(result);
                     db.close();
-                });
+                })
             });
 
     }catch(err){
@@ -157,25 +159,27 @@ router.route('/findById').get(function(req, res){
     }
 })
 
-router.route('/edit').put(function(req,res) {
+router.route('/edit').post(function(req, res) {
+    console.log(req.body);
     try{
     MongoClient.connect(url, function(err, db) {
         if (err) throw err;
         var dbo = db.db("productso");
+        var id = req.body[0]._id;
+        console.log(id);
         var title = req.body[0].title;
         var price= req.body[0].price;
         var stockamount = req.body[0].stockamount;
         var instock= req.body[0].instock;
         var photo= req.body[0].photo;
-        var code = req.body[0].productCode;
         var rating = req.body[0].rating;
         var description = req.body[0].description;
-        var myquery = { id: id };
-        var newvalues = { $set: {title: title, rating: rating, description: description, price: price, instock: instock, photo: photo} };
-        dbo.collection("products").updateOne(myquery, newvalues, function(err, res) {
+        var photoUrl = req.body[0].photoUrl;
+        var myquery = {_id: new mongo.ObjectID(id)};
+        var newvalues = { $set : {rating: rating, description: description, title:title, price:price, stockamount: stockamount, instock: instock, photo:photo, photoUrl: photoUrl}};
+        dbo.collection("products").findOneAndUpdate(myquery, newvalues, function(err, res) {
             if (err) throw err;
-            console.log(obj.result.n + "document updated");
-            res.send(obj.result.n + " document(s) updated");
+            console.log("1 document updated");
             db.close();
         });
     });
@@ -185,20 +189,23 @@ router.route('/edit').put(function(req,res) {
 
 })
 
-router.route('/delete').delete(function(req, res){
-    console.log(req.body, typeof(req.body));
-    MongoClient.connect(url, function(err, db) {
-        if (err) throw err;
-        var dbo = db.db("productso");
-        var code = req.body[0].productCode;
-        var myquery = { productCode: productCode };
-        dbo.collection("products").deleteOne(myquery, function(err, obj) {
+router.route('/delete/:id').delete(function(req, res){
+    try {
+        MongoClient.connect(url, function (err, db) {
             if (err) throw err;
-            console.log(obj.result.n + " document(s) deleted");
-            res.send(obj.result.n + " document(s) deleted");
-            db.close();
+            var dbo = db.db("productso");
+            var id = req.url.split('/');
+            var myobj = id[2].toString();
+            dbo.collection("products").deleteOne({_id: new mongo.ObjectID(myobj)}, function(err, results) {
+                if (err){console.log("failed");throw err;}
+                console.log("1 document deleted");
+                res.send("1 document(s) deleted");
+                db.close();
+            });
         });
-    });
+    }catch(e){
+        console.log(e);
+    }
 })
 
 router.route('/abcd').get(function(req,res) {
