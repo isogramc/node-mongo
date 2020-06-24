@@ -160,17 +160,21 @@ router.route('/findbyid').post(function(req, res){
 })
 
 router.route('/edit').post(function(req, res) {
+    console.log('---------------------------------------')
     console.log(req.body);
     try{
     MongoClient.connect(url, function(err, db) {
         if (err) throw err;
         var dbo = db.db("productso");
-        var id = req.body[0]._id;
+        var id = req.body[0].id;
         console.log(id);
         var title = req.body[0].title;
         var price= req.body[0].price;
         var stockamount = req.body[0].stockamount;
-        var instock= req.body[0].instock;
+        var instock = "false";
+        if(parseInt(stockamount)>0){
+            instock = "true";
+        }
         var photo= req.body[0].photo;
         var rating = req.body[0].rating;
         var description = req.body[0].description;
