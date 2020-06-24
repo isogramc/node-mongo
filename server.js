@@ -2,6 +2,7 @@ var fs = require('fs');
 var express = require('express');
 var cors = require('cors');
 var mime = require('mime');
+var stream = require('stream');
 
 var path = require('path');
 
@@ -45,22 +46,26 @@ router.route('/addImage').post(upload.single("photo"),
 })
 
 
-/*router.route('/images').get(function (req, res) {
-    filePath = __dirname + "/public/1592689643772-partytime1_001.jpg";
-    file = "1592689643772-partytime1_001.jpg";
-    console.log(filePath, file);
-    fs.exists(filePath, function(exists){
-        if (exists) {
-            res.writeHead(200, {
-                "Content-Type": "application/octet-stream",
-                "Content-Disposition" : "attachment; filename=" + file});
-            fs.createReadStream(filePath + file).pipe(res);
-        } else {
-            res.writeHead(400, {"Content-Type": "text/plain"});
-            res.end("ERROR File does NOT Exists.ipa");
-        }
-    });
-})*/
+router.route('/image/:filename').get(function (req, res) {
+    var url = req.url;
+    var mfilename = url.substring(url.lastIndexOf('/') + 1);
+    console.log(mfilename);
+    var filePath = path.join(__dirname, 'images', mfilename);
+    const r = fs.createReadStream(filePath) // or any other way to get a readable stream
+    const ps = new stream.PassThrough() // <---- this makes a trick with stream error handling
+    stream.pipeline(
+        r,
+        ps, // <---- this makes a trick with stream error handling
+        (err) => {
+            if (err) {
+                console.log(err) // No such file or any other kind of error
+                return res.sendStatus(400);
+            }
+        })
+    ps.pipe(res) // <---- this makes a trick with stream error handling
+})
+
+
 
 router.route('/list').get(function(req,res) {
     try{
@@ -71,7 +76,7 @@ router.route('/list').get(function(req,res) {
                 var dbo = db.db("productso");
                 var results = dbo.collection("products").find({}).toArray(function(err, result) {
                     if (err) throw err;
-                    console.log(result);
+                    // console.log(result);
                     res.send(result);
                     db.close();
                 });
@@ -104,7 +109,7 @@ router.route('/create').post(function(req,res) {
             var photo = req.body[0].photo;
             var photoUrl = req.body[0].imageUrl;
             //var code = req.body[0].productCode;
-            var guid = (title.substr(0,3).toUpperCase()) + (Math.random()*100000).toString().substr(0,3);
+            var guid = (title.trim().substr(0,3).toUpperCase()) + (Math.random()*1000000).toString().substr(0,4);
             var rating = req.body[0].rating;
             var description = req.body[0].description;
             console.log(instock);
